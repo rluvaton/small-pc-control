@@ -1,8 +1,14 @@
 # Imports
 import socket
 
+# Saving images
+import os
+
+from responseHandle import ResponseHandler
+
 target_ip = '127.0.0.1'
 target_port = 9999
+size = 4096
 
 # create an ipv4 (AF_INET) socket object using the tcp protocol (SOCK_STREAM)
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,12 +25,38 @@ print 'You Can Start Typing...'
 message = None
 data = None
 
+
+# Create Directory if not exist
+def create_dir_if_not_exists(dir_name):
+    try:
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+        return True
+    except Exception, err:
+        print 'Error at create directories: ', err
+        return False
+
+
+# Server Name
+server_name = None
+
+
+def get_more_data_factory(socket, _message):
+    # Message sent to server
+    socket.send(_message)
+
+    # Message received from server
+    content = socket.recv(size)
+
+    try:
+        ResponseHandler.handle_requests(message, data, None, None)
+    except Exception, err:
+        print 'Error', err
+
+    return content
+
+
 while True:
-
-    if data == 'Bye Bye!':
-        print ' -- Exiting -- '
-        break
-
     # ask the server whether he wants to continue
     message = raw_input("> ")
     print 'send: {}'.format(message)
@@ -33,14 +65,23 @@ while True:
         print 'Server Disconnected'
         break
 
-    # message sent to server
-    server.send(message)
+    res = ResponseHandler.get_request_type(message)
+    if res[1] is None:
+        # Message sent to server
+        server.send(message)
 
-    # message received from server
-    data = server.recv(4096)
+        # Message received from server
+        data = server.recv(size)
 
-    # print the received message
-    # here it would be a reverse of sent message
-    print 'Received: {}'.format(data)
+        ResponseHandler.handle_requests(message,
+                                        data,
+                                        lambda _size: server.recv(_size),
+                                        lambda _mess: get_more_data_factory(server, _mess))
+
+        # Print the received message
+        print 'Received: {}'.format(data)
+    else:
+        print 'Error Accord: {}'.format(res[1])
+        continue
 
 server.close()
