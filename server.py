@@ -5,6 +5,8 @@ import threading
 bind_ip = '127.0.0.1'
 bind_port = 9999
 
+size = 4096
+
 # Create Socket
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((bind_ip, bind_port))
@@ -16,17 +18,36 @@ print 'Listening on {}:{}'.format(bind_ip, bind_port)
 
 # New Client Connection Handler
 def handle_client_connection(client_socket):
-    # Receive data from client
-    request = client_socket.recv(1024)
-    print 'Received {}'.format(request)
+    while True:
+        try:
+            # Receive data from client
+            request = client_socket.recv(size)
 
-    from userActions import UserActions
-    res = UserActions.handle_requests(request)
-    print 'Send {}'.format(res)
+            # Check if disconnected
+            if not request:
+                print 'Client Disconnected'
+                break
 
-    # Response to client
-    client_socket.send(res)
-    client_socket.close()
+            print 'Received | {}'.format(request)
+
+            from userActions import UserActions
+            res = UserActions.handle_requests(request)
+            print 'Send     | {}'.format(res[0])
+
+            # Response to client
+            client_socket.send(res[0])
+
+            print ' ------------------- '
+
+            # Close client
+            if res[1]:
+                client_socket.close()
+                break
+        except Exception, e:
+            client_socket.close()
+            print 'Error accord', e
+            print 'Closing'
+            break
 
 
 # Start The Server

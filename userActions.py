@@ -1,13 +1,14 @@
-
-# ##########################
+# ########################################################
+#                       Request Format
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 # Request content must be in the following format
 # [request name]: [variable1] [variable2] ... [variableN]
 #
 # Login Example
 # content will equal
 # Connect: myUserName 123123
-#
-# ##########################
+# ########################################################
+
 
 # User Actions
 class UserActions:
@@ -27,10 +28,14 @@ class UserActions:
     @staticmethod
     def user_register(content):
         params = content.split(' ')
-        print 'Register\n'
-        print 'User Name: ' + params[0]
-        print 'Password: ' + params[1]
-        return 'Success'
+
+        if len(params) != 2:
+            err_message = 'Parameters count can\'t be different than 2 in user registration'
+            print err_message
+            return err_message, False
+
+        from userManagement import add_user_record
+        return add_user_record(params[0], params[1]), False
 
     # User Login
     # If no user returning: 'Bad connection parameters'
@@ -44,7 +49,15 @@ class UserActions:
     # userName 123123
     @staticmethod
     def user_login(content):
-        return False
+        params = content.split(' ')
+
+        if len(params) != 2:
+            err_message = 'Parameters count can\'t be different than 2 in user login'
+            print err_message
+            return err_message, False
+
+        from userManagement import search_user_record
+        return search_user_record(params[0], params[1]), False
 
     # Get Time
     # -------------
@@ -55,7 +68,7 @@ class UserActions:
     # ''
     @staticmethod
     def time(content):
-        return False
+        return 'Not Implemented Yet', False
 
     # Get PC Name
     # -------------
@@ -66,10 +79,11 @@ class UserActions:
     # ''
     @staticmethod
     def get_pc_name(content):
-        return False
+        return 'Not Implemented Yet', False
 
     # Exit connection
-    # It will return: Bye Bye'
+    # Returns the message and if to close connection
+    # It will return: 'Bye Bye'
     # -------------
     # content is the variables in the request
     # No variables
@@ -78,7 +92,7 @@ class UserActions:
     # ''
     @staticmethod
     def exit(content):
-        return False
+        return 'Bye Bye', True
 
     # Send Screen shot
     # -------------
@@ -89,7 +103,7 @@ class UserActions:
     # ''
     @staticmethod
     def send_screen_shot(content):
-        return False
+        return 'Not Implemented Yet', False
 
     # Run Program
     # If no program return: 'No Program'
@@ -101,7 +115,7 @@ class UserActions:
     # Chrome
     @staticmethod
     def run_program(content):
-        return False
+        return 'Not Implemented Yet', False
 
     # Open Folder
     # If no folder return: 'No Folder'
@@ -113,27 +127,39 @@ class UserActions:
     # c:\\folderName
     @staticmethod
     def open_folder(content):
-        return False
+        return 'Not Implemented Yet', False
 
     # Handle Requests
-    # Return the Response
+    # Return Tuple that (<messages>, <close-client>
     @staticmethod
     def handle_requests(content):
         if content is None:
-            return None
+            print 'content sent can\'t be null'
+            return 'content sent can\'t be null', False
 
         # Split to action type and parameters
         two_parts = content.split(':')
 
+        if len(two_parts) == 0:
+            print 'Content Parsing Error', two_parts
+            return 'Content parsing error', False
+
+        # Remove the leading trailing spaces
         two_parts[0] = str(two_parts[0]).strip()
-        two_parts[1] = str(two_parts[1]).strip()
+
+        if len(two_parts) < 2:
+            two_parts.append('')
+            two_parts[1] = str(two_parts[1]).strip()
 
         from userActionTypes import get_action_fn
 
+        # Get action Handler Function
         fn = get_action_fn(two_parts[0])
 
         # Not Founded
         if fn is None:
-            return 'Unknown request: ' + two_parts[0]
+            return 'Unknown request: ' + two_parts[0], False
 
-        return fn(two_parts[1])
+        res = fn(two_parts[1])
+
+        return res[0], res[1]
