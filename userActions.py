@@ -46,7 +46,7 @@ class UserActions:
             return err_message, False
 
         from userManagement import add_user_record
-        return add_user_record(params[0], params[1]), False
+        return add_user_record(params[0], params[1])
 
     # User Login
     # If no user returning: 'Bad connection parameters'
@@ -68,7 +68,7 @@ class UserActions:
             return err_message, False
 
         from userManagement import search_user_record
-        return search_user_record(params[0], params[1]), False
+        return search_user_record(params[0], params[1])
 
     # Get Time
     # -------------
@@ -79,7 +79,7 @@ class UserActions:
     # ''
     @staticmethod
     def time(content):
-        return str(time.ctime()), False
+        return str(time.ctime())
 
     # Get PC Name
     # -------------
@@ -90,7 +90,12 @@ class UserActions:
     # ''
     @staticmethod
     def get_pc_name(content):
-        return os.environ['COMPUTERNAME'], False
+        try:
+            return os.environ['COMPUTERNAME']
+        except Exception, err:
+            err_mess = 'Can\'t get computer name, please try again later'
+            print err_mess, err
+            return err_mess
 
     # Exit connection
     # Returns the message and if to close connection
@@ -114,7 +119,7 @@ class UserActions:
     # ''
     @staticmethod
     def send_screen_shot(content):
-        return 'Not Implemented Yet', False
+        return 'Not Implemented Yet'
 
     # Run Program
     # If no program return: 'No Program'
@@ -126,7 +131,13 @@ class UserActions:
     # Chrome
     @staticmethod
     def run_program(content):
-        return 'Not Implemented Yet', False
+        try:
+            os.system('start ' + content)
+            return 'Program {} opened'.format(content)
+        except Exception, err:
+            err_mes = 'Error opening program ({}), try again later'.format(content)
+            print err_mes, err
+            return err_mes
 
     # Open Folder
     # If no folder return: 'No Folder'
@@ -137,8 +148,7 @@ class UserActions:
     # Example
     # c:\\folderName
     @staticmethod
-    def open_folder(content):
-
+    def get_folder(content):
         # Check if path exists
         if not os.path.exists(content):
             err_mes = '{} not exists'.format(content)
@@ -152,12 +162,12 @@ class UserActions:
             return err_mes
 
         try:
-            subprocess.Popen(r'explorer /select,"{}"'.format(content))
-            return 'Folder {} opened'.format(content), False
+            folder_content = os.listdir(content)
+            return '\n'.join(folder_content)
         except Exception, err:
-            err_mes = 'Error opening folder ({}), try again later'.format(content)
+            err_mes = 'Error getting folder ({}) content, try again later'.format(content)
             print err_mes, err
-            return err_mes, False
+            return err_mes
 
     # Handle Requests
     # Return Tuple that (<messages>, <close-client>
@@ -194,5 +204,8 @@ class UserActions:
             return 'Unknown request: ' + two_parts[0], False
 
         res = fn(two_parts[1])
+
+        if isinstance(res, basestring):
+            res = res, False
 
         return res[0], res[1]

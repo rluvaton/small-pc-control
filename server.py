@@ -17,6 +17,7 @@ server.listen(5)  # max backlog of connections
 # Listen Info
 print 'Listening on {}:{}'.format(bind_ip, bind_port)
 
+
 # New Client Connection Handler
 def handle_client_connection(client_socket):
     while True:

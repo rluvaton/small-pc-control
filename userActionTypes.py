@@ -9,7 +9,7 @@ UserActionTypes = {
     "exit": UserActions.exit,
     "screenshot": UserActions.send_screen_shot,
     "run program": UserActions.run_program,
-    "open folder": UserActions.open_folder
+    "get folder": UserActions.get_folder
 }
 
 
