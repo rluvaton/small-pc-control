@@ -11,8 +11,6 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # server.connect((target, port))
 server.connect((target_ip, target_port))
 
-message = '{} : {} {}'.format('Register', 'test', 'password')
-
 while True:
 
     # ask the server whether he wants to continue
