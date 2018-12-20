@@ -1,6 +1,11 @@
-# Imports
+# Get Computer Name
 import os
+
+# Get Time
 import time
+
+# Open Folder
+import subprocess
 
 
 # ########################################################
@@ -13,6 +18,7 @@ import time
 # content will equal
 # Connect: myUserName 123123
 # ########################################################
+
 
 
 # User Actions
@@ -132,7 +138,26 @@ class UserActions:
     # c:\\folderName
     @staticmethod
     def open_folder(content):
-        return 'Not Implemented Yet', False
+
+        # Check if path exists
+        if not os.path.exists(content):
+            err_mes = '{} not exists'.format(content)
+            print err_mes
+            return err_mes
+
+        # Check if path is directory
+        if not os.path.isdir(content):
+            err_mes = '{} isn\'t a folder'.format(content)
+            print err_mes
+            return err_mes
+
+        try:
+            subprocess.Popen(r'explorer /select,"{}"'.format(content))
+            return 'Folder {} opened'.format(content), False
+        except Exception, err:
+            err_mes = 'Error opening folder ({}), try again later'.format(content)
+            print err_mes, err
+            return err_mes, False
 
     # Handle Requests
     # Return Tuple that (<messages>, <close-client>
@@ -144,7 +169,7 @@ class UserActions:
             return err_mes, False
 
         # Split to action type and parameters
-        two_parts = content.split(':')
+        two_parts = content.split(':', 1)
 
         if len(two_parts) == 0:
             err_mes = 'Content Parsing Error'
@@ -156,7 +181,8 @@ class UserActions:
 
         if len(two_parts) < 2:
             two_parts.append('')
-            two_parts[1] = str(two_parts[1]).strip()
+
+        two_parts[1] = two_parts[1].strip()
 
         from userActionTypes import get_action_fn
 
