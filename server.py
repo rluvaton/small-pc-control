@@ -33,8 +33,13 @@ def handle_client_connection(client_socket):
             print 'Received | {}'.format(request)
 
             from userActions import UserActions
-            res = UserActions.handle_requests(request)
-            print 'Send     | {}'.format(res[0])
+            res = UserActions.handle_requests(request, lambda data: client_socket.send(data))
+
+            # res[1] is error flag
+            if res[1]:
+                print 'Error accord: {}'.format(res[0])
+            else:
+                print 'Send     | {}'.format(res[0])
 
             # Response to client
             client_socket.send(res[0])
