@@ -1,4 +1,4 @@
-# TODO - Implement this functions
+from .userActionTypes import UserActionTypes
 
 # ##########################
 # Request content must be in the following format
@@ -120,4 +120,16 @@ class UserActions:
         # TODO - Get the action type function and pass the second result of the split
         # TODO - Example UserActionTypes(split[0])[1](split[1])
         # TODO - Return the value
+        if content is None:
+            return None
+
+        # Split to action type and parameters
+        twoParts = content.split(':')
+
+        # Not Founded
+        if UserActionTypes.__getattribute__(twoParts[0]):
+            None
+
+
+
         return False
