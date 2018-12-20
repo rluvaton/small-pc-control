@@ -1,3 +1,8 @@
+# Imports
+import os
+import time
+
+
 # ########################################################
 #                       Request Format
 # ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
@@ -68,7 +73,7 @@ class UserActions:
     # ''
     @staticmethod
     def time(content):
-        return 'Not Implemented Yet', False
+        return str(time.ctime()), False
 
     # Get PC Name
     # -------------
@@ -79,7 +84,7 @@ class UserActions:
     # ''
     @staticmethod
     def get_pc_name(content):
-        return 'Not Implemented Yet', False
+        return os.environ['COMPUTERNAME'], False
 
     # Exit connection
     # Returns the message and if to close connection
@@ -92,7 +97,7 @@ class UserActions:
     # ''
     @staticmethod
     def exit(content):
-        return 'Bye Bye', True
+        return 'Bye Bye!', True
 
     # Send Screen shot
     # -------------
@@ -134,18 +139,20 @@ class UserActions:
     @staticmethod
     def handle_requests(content):
         if content is None:
-            print 'content sent can\'t be null'
-            return 'content sent can\'t be null', False
+            err_mes = 'content sent can\'t be null'
+            print err_mes, content
+            return err_mes, False
 
         # Split to action type and parameters
         two_parts = content.split(':')
 
         if len(two_parts) == 0:
-            print 'Content Parsing Error', two_parts
-            return 'Content parsing error', False
+            err_mes = 'Content Parsing Error'
+            print err_mes, two_parts
+            return err_mes, False
 
         # Remove the leading trailing spaces
-        two_parts[0] = str(two_parts[0]).strip()
+        two_parts[0] = str(two_parts[0]).strip().lower()
 
         if len(two_parts) < 2:
             two_parts.append('')
