@@ -7,11 +7,23 @@ target_port = 9999
 # create an ipv4 (AF_INET) socket object using the tcp protocol (SOCK_STREAM)
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+print 'Connecting...'
+
 # connect the server
 # server.connect((target, port))
 server.connect((target_ip, target_port))
 
+print 'Connection {}:{} Established'.format(target_ip, target_port)
+print 'You Can Start Typing...'
+
+message = None
+data = None
+
 while True:
+
+    if data == 'Bye Bye!':
+        print ' -- Exiting -- '
+        break
 
     # ask the server whether he wants to continue
     message = raw_input("> ")
