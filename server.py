@@ -37,7 +37,7 @@ def handle_client_connection(client_socket):
 
             # res[1] is error flag
             if res[1]:
-                print 'Error accord: {}'.format(res[0])
+                print 'Error occurred: {}'.format(res[0])
             else:
                 print 'Send     | {}'.format(res[0])
 
@@ -47,12 +47,12 @@ def handle_client_connection(client_socket):
             print ' ------------------- '
 
             # Close client
-            if res[1]:
+            if res[2]:
                 client_socket.close()
                 break
         except Exception, e:
             client_socket.close()
-            print 'Error accord', e
+            print 'Error occurred', e
             print 'Closing'
             break
 
