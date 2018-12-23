@@ -40,7 +40,6 @@ def create_dir_if_not_exists(dir_name):
 # Server Name
 server_name = None
 
-
 while True:
     # ask the server whether he wants to continue
     message = raw_input("> ")
@@ -58,13 +57,16 @@ while True:
         # Message received from server
         data = server.recv(size)
 
-        ResponseHandler.handle_requests(message,
-                                        data,
-                                        lambda _size: server.recv((size if _size is None else _size)),
-                                        lambda _mess: server.send(_mess))
+        fn_res = ResponseHandler.handle_requests(message,
+                                                 data,
+                                                 lambda _size: server.recv((size if _size is None else _size)),
+                                                 lambda _mess: server.send(_mess))
 
         # Print the received message
         print 'Received: {}'.format(data)
+
+        if fn_res[1]:
+            break
     else:
         print 'Error Accord: {}'.format(res[1])
         continue

@@ -20,7 +20,7 @@ class ResponseHandler:
         except Exception, err:
             err_msg = 'Error at parse path: ' + dir_path
             print err_msg, err
-            return err_msg, True
+            return err_msg, False
 
     # Create Directory if not exist
     @staticmethod
@@ -28,7 +28,7 @@ class ResponseHandler:
         if relative:
             dir_path = ResponseHandler.get_relative_path(dir_path)
             if dir_path[1] is True:
-                return dir_path
+                return dir_path, False
 
         try:
             if not os.path.exists(dir_path[0]):
@@ -37,16 +37,18 @@ class ResponseHandler:
         except Exception, err:
             err_msg = 'Error at create directories: '
             print err_msg, err
-            return err_msg, True
+            return err_msg, False
 
     @staticmethod
     def server_name_handler(request, response, get_more_data, get_server_name):
         global server_name
-        server_name = response
+        server_name = response,
+        return None, False
 
     @staticmethod
     def exit_handler(request, response, get_more_data, get_server_name):
         print ' -- Exiting -- '
+        return None, True
 
     @staticmethod
     def screenshot_handler(request, response, get_more_data, get_server_name):
@@ -55,7 +57,7 @@ class ResponseHandler:
         fname = 'screenshot-{}.png'.format(time.time())
         save_path = ResponseHandler.get_relative_path(fname)
         if save_path is None:
-            return ""
+            return None, False
 
         index = 0
 
@@ -72,7 +74,7 @@ class ResponseHandler:
         except Exception, err:
             err_msg = 'Error at saving image accord'
             print err_msg, err
-            return err_msg, True
+            return err_msg, False
 
         if server_name is None:
             get_server_name('name')
@@ -80,21 +82,22 @@ class ResponseHandler:
 
         have_dir = ResponseHandler.create_dir_if_not_exists(server_name, True)
         if have_dir[1]:
-            print 'Can\'t save image due to directory reading writing problems'
-            return False
+            err_msg = 'Can\'t save image due to directory reading writing problems'
+            print err_msg
+            return err_msg, False
 
         new_save_path = ResponseHandler.get_relative_path('{}\\{}'.format(server_name, fname))
         if new_save_path[1]:
-            return new_save_path
+            return new_save_path, False
 
         try:
             os.rename(save_path[0], new_save_path[0])
         except Exception, err:
             err_msg = 'Error at moving file from temp to wanted path ({} -> {})'.format(save_path, new_save_path)
             print err_msg
-            return err_msg
+            return err_msg, False
 
-        return 'Success'
+        return 'Success', False
 
     # Handle Requests
     # Return Tuple that (<messages>, <have-error>, <close-client>)
@@ -105,12 +108,12 @@ class ResponseHandler:
         if res is None:
             err_mes = 'Error Accord at get request type'
             print err_mes
-            return err_mes, True, False
+            return err_mes, False
 
         if res[0] is None:
             err_mes = res[1] if res[1] is None else 'Error ar get request type'
             print err_mes, res
-            return err_mes, True, False
+            return err_mes, False
 
         res = res[0]
 
@@ -121,14 +124,14 @@ class ResponseHandler:
 
         # Not Founded
         if fn is None:
-            return None, False, False
+            return None, False
 
-        res = fn(request, response, get_more_data, get_server_name)
+        fn_res = fn(request, response, get_more_data, get_server_name)
 
-        if isinstance(res, basestring):
-            res = res, False, False
+        if isinstance(fn_res, basestring):
+            fn_res = fn_res, False
 
-        return None
+        return fn_res[0], fn_res[1]
 
     # Get Request type
     # Return Tuple that (request-type, <error-message>)
