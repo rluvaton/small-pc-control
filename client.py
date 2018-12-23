@@ -10,6 +10,8 @@ target_ip = '127.0.0.1'
 target_port = 9999
 size = 4096
 
+target_ip_1 = raw_input("IP:")
+
 # create an ipv4 (AF_INET) socket object using the tcp protocol (SOCK_STREAM)
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -17,7 +19,7 @@ print 'Connecting...'
 
 # connect the server
 # server.connect((target, port))
-server.connect((target_ip, target_port))
+server.connect((target_ip_1 if target_ip_1 is not None else target_ip, target_port))
 
 print 'Connection {}:{} Established'.format(target_ip, target_port)
 print 'You Can Start Typing...'
