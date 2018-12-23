@@ -41,21 +41,6 @@ def create_dir_if_not_exists(dir_name):
 server_name = None
 
 
-def get_more_data_factory(socket, _message):
-    # Message sent to server
-    socket.send(_message)
-
-    # Message received from server
-    content = socket.recv(size)
-
-    try:
-        ResponseHandler.handle_requests(message, data, None, None)
-    except Exception, err:
-        print 'Error', err
-
-    return content
-
-
 while True:
     # ask the server whether he wants to continue
     message = raw_input("> ")
@@ -75,8 +60,8 @@ while True:
 
         ResponseHandler.handle_requests(message,
                                         data,
-                                        lambda _size: server.recv(_size),
-                                        lambda _mess: get_more_data_factory(server, _mess))
+                                        lambda _size: server.recv((size if _size is None else _size)),
+                                        lambda _mess: server.send(_mess))
 
         # Print the received message
         print 'Received: {}'.format(data)

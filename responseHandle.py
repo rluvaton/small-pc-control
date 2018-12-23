@@ -60,22 +60,11 @@ class ResponseHandler:
         index = 0
 
         try:
-            # fp = open(fname, 'wb')
-            # while True:
-            #     index += 1
-            #     print 'index ', index
-            #     if not response:
-            #         print 'no more', response
-            #         break
-            #     if response == 'image sent!':
-            #         break
-            #     fp.write(response)
-            #
-            #     response = get_more_data('')
 
-            fp = open(fname,'w')
+            fp = open(fname,'wb')
             while True:
                 if not response or response == 'Image Data':
+                    print '-- end image --'
                     break
                 fp.write(response)
                 response = get_more_data(512)
@@ -86,7 +75,8 @@ class ResponseHandler:
             return err_msg, True
 
         if server_name is None:
-            server_name = get_server_name('name')
+            get_server_name('name')
+            server_name = get_more_data(None)
 
         have_dir = ResponseHandler.create_dir_if_not_exists(server_name, True)
         if have_dir[1]:
