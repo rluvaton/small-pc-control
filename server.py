@@ -2,8 +2,6 @@
 import socket
 import threading
 
-from userActions import UserActions
-
 bind_ip = '127.0.0.1'
 bind_port = 9999
 
@@ -20,6 +18,10 @@ print 'Listening on {}:{}'.format(bind_ip, bind_port)
 
 # New Client Connection Handler
 def handle_client_connection(client_socket):
+
+    from userActions import UserActions
+    user_actions = UserActions(lambda data: client_socket.send(data))
+
     while True:
         try:
             # Receive data from client
@@ -32,8 +34,7 @@ def handle_client_connection(client_socket):
 
             print 'Received | {}'.format(request)
 
-            from userActions import UserActions
-            res = UserActions.handle_requests(request, lambda data: client_socket.send(data))
+            res = user_actions.handle_requests(request)
 
             # res[1] is error flag
             if res[1]:
