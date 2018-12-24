@@ -62,7 +62,6 @@ class UserActions:
         """
         Handle Requests
         :param content: content of the message
-        :param send: send to client function
         :return: <message>, <have-error>, <close-client>
         """
 
@@ -98,11 +97,46 @@ class UserActions:
                (res[1] if res[1] is not None else False), \
                (res[2] if res[2] is not None else False)
 
+    def get_file_content(self, content):
+        """
+        Get File Content
+        :param content: file path
+        :return: <message>, <have-error>, <close-client>
+        :example: Usage Example
+        content = 'c:\file.txt'
+        """
+
+        # Check if user logged in before doing any actions
+        if not self.user_connected:
+            return 'Login / Register Before doing any action', True, False
+
+        # Check if path exists
+        if not os.path.exists(content):
+            err_mes = '{} not exists'.format(content)
+            print err_mes
+            return err_mes, True
+
+        # Check if path is a folder
+        if os.path.isdir(content):
+            err_mes = '{} isn\'t a file'.format(content)
+            print err_mes
+            return err_mes, True
+
+        # Start reading & sending the image
+        fp = open(content, 'rb')
+        while True:
+            d_block = fp.read(512)
+            if not d_block:
+                break
+            self.send_fn(d_block)
+            print d_block
+        fp.close()
+
+
     def get_folder(self, content):
         """
         Open Folder
         :param content: variables in the request (folder path here
-        :param send: send to client function
         :return: <message>, <have-error>, <close-client>
         :example: Usage Example
         content = 'c:\folderName'
@@ -136,7 +170,6 @@ class UserActions:
         """
         Run Program
         :param content: variables in the request (program name here)
-        :param send: send to client function
         :return: <message>, <have-error>, <close-client>
         :notes: If no program return: 'No Program'
         :example: Usage Example
@@ -159,7 +192,6 @@ class UserActions:
         """
         Send Screen shot
         :param content: variables in the request (None in this request)
-        :param send: send to client function
         :return: <message>, <have-error>, <close-client>
         """
 
@@ -193,7 +225,6 @@ class UserActions:
         """
         Exit connection
         :param content: variables in the request (None in this request)
-        :param send: send to client function
         :return: <message>, <have-error>, <close-client>
         :notes: Returns the message Bye Bye! and pass close connection flag
         """
@@ -203,7 +234,6 @@ class UserActions:
         """
         Get PC Name
         :param content: variables in the request (None in this request)
-        :param send: send to client function
         :return: <message>, <have-error>, <close-client>
         """
 
@@ -222,7 +252,6 @@ class UserActions:
         """
         Get Time
         :param content: variables in the request (None in this request)
-        :param send: send to client function
         :return: <message>, <have-error>, <close-client>
         """
 
@@ -236,7 +265,6 @@ class UserActions:
         """
         User Login
         :param content: variables in the request (user name and password)
-        :param send: send to client function
         :return: <message>, <have-error>, <close-client>
         :example: Usage Example
         userName 123123
@@ -251,8 +279,9 @@ class UserActions:
             print err_message
             return err_message, True, False
 
-        from userManagement import search_user_record
-        res = search_user_record(params[0], params[1])
+        from userManagement import singleton
+
+        res = singleton.search_user_record(params[0], params[1])
 
         if res[1]:
             self.user_connected = True
@@ -263,7 +292,6 @@ class UserActions:
         """
         User Register
         :param content: variables in the request (None in this request)
-        :param send: send to client function
         :return: <message>, <have-error>, <close-client>
         :example: Usage Example
         userName 123123
@@ -278,8 +306,8 @@ class UserActions:
             print err_message
             return err_message, True, False
 
-        from userManagement import add_user_record
-        res = add_user_record(params[0], params[1])
+        from userManagement import singleton
+        res = singleton.add_user_record(params[0], params[1])
 
         if res[1]:
             self.user_connected = True

@@ -5,6 +5,9 @@ import threading
 bind_ip = '0.0.0.0'
 bind_port = 9999
 
+# Local host
+bind_ip = '127.0.0.1'
+
 size = 4096
 
 # Create Socket
@@ -36,7 +39,7 @@ def handle_client_connection(client_socket):
 
             res = user_actions.handle_requests(request)
 
-            # res[1] is error flag
+            # res[1] is an error flag
             if res[1]:
                 print 'Error occurred: {}'.format(res[0])
             else:
