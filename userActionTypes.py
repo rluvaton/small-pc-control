@@ -14,7 +14,7 @@ class UserActionType:
             "screenshot": self.user.send_screen_shot,
             "run program": self.user.run_program,
             "get folder": self.user.get_folder,
-            "file content": self.user.get_file_content
+            "file content": self.user.get_file_content,
         }
 
     # Get Function based on action type, if no command then None
