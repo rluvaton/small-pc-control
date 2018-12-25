@@ -132,7 +132,6 @@ class UserActions:
             print d_block
         fp.close()
 
-
     def get_folder(self, content):
         """
         Open Folder
@@ -180,6 +179,16 @@ class UserActions:
         if not self.user_connected:
             return 'Login / Register Before doing any action', True, False
 
+        if os.path.isfile(content.replace('"', '')):
+            try:
+                os.system('call ' + content)
+            except Exception, err:
+                err_mes = 'Error opening program ({}), try again later'.format(content)
+                print err_mes, err
+                return err_mes, True
+
+            return 'Program {} opened'.format(content)
+
         try:
             os.system('start ' + content)
             return 'Program {} opened'.format(content)
@@ -187,6 +196,8 @@ class UserActions:
             err_mes = 'Error opening program ({}), try again later'.format(content)
             print err_mes, err
             return err_mes, True
+
+        return 'Program {} opened'.format(content)
 
     def send_screen_shot(self, content):
         """

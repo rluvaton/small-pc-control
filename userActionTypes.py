@@ -7,7 +7,9 @@ class UserActionType:
         # User Action Types
         self.UserActionTypes = {
             "connect": self.user.user_login,
+            "login": self.user.user_login,
             "register": self.user.user_register,
+            "signup": self.user.user_register,
             "time": self.user.time,
             "name": self.user.get_pc_name,
             "exit": self.user.exit,
