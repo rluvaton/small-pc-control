@@ -134,6 +134,9 @@ class ResponseHandler:
                 'error': 'message path can\'t be null'
             }
 
+        if 'error' in save_path:
+            return save_path
+
         try:
             fp = open(fname,'wb')
             while True:
@@ -156,20 +159,18 @@ class ResponseHandler:
 
         have_dir = create_dir_if_not_exists(server_name, True)
         if 'error' in have_dir:
-            err_msg = 'Can\'t save image due to directory reading writing problems'
+            err_msg = 'Can\'t save image due to directory reading writing problems', have_dir
             print err_msg
             return {
                 'error': err_msg
             }
 
         new_save_path = get_relative_path('{}\\{}'.format(server_name, fname))
-        if new_save_path[1]:
-            return {
-                'path': new_save_path
-            }
+        if 'error' in new_save_path:
+            return new_save_path
 
         try:
-            os.rename(save_path[0], new_save_path[0])
+            os.rename(save_path['path'], new_save_path['path'])
         except Exception, err:
             err_msg = 'Error at moving file from temp to wanted path ({} -> {})'.format(save_path, new_save_path)
             print err_msg

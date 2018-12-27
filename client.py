@@ -85,7 +85,7 @@ def run_heartbeat():
     while heartbeat:
         try:
             # Message received from server
-            heartbeat_server.recv(heartbeat_request_byte_size)
+            print heartbeat_server.recv(heartbeat_request_byte_size)
         except socket.timeout:
             if heartbeat:
                 print 'Connection was closed'
@@ -170,7 +170,7 @@ while True:
     # Print the received message
     print 'Received: {}'.format(data)
 
-    if 'close-client' in data and data['close-client']:
+    if 'close-client' in fn_res and fn_res['close-client']:
         heartbeat = False
         break
 

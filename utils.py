@@ -45,10 +45,11 @@ def create_dir_if_not_exists(dir_path, relative = False):
         dir_path = get_relative_path(dir_path)
         if 'error' in dir_path:
             return dir_path
+        dir_path = dir_path['path']
 
     try:
-        if not os.path.exists(dir_path[0]):
-            os.makedirs(dir_path[0])
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
         return {'message': 'Created directories successfully'}
     except Exception, err:
         err_msg = 'Error at create directories: '
