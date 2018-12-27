@@ -11,5 +11,7 @@ UserActionTypes = {
 # Get Function based on action type, if no command then None
 def get_action_fn(command):
     if command not in UserActionTypes:
-        return None
-    return UserActionTypes[command]
+        return {}
+    return {
+        'fn': UserActionTypes[command]
+    }

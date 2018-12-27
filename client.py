@@ -151,26 +151,22 @@ while True:
         print 'Server Disconnected'
         break
 
-    res = ResponseHandler.get_request_type(message)
-    if res[1] is None:
-        # Message sent to server
-        server.send(message)
+    handler = ResponseHandler(lambda _size: server.recv((size if _size is None else _size)),
+                              lambda _mess: server.send(_mess))
 
-        # Message received from server
-        data = server.recv(size)
+    # Message sent to server
+    server.send(message)
 
-        fn_res = ResponseHandler.handle_requests(message,
-                                                 data,
-                                                 lambda _size: server.recv((size if _size is None else _size)),
-                                                 lambda _mess: server.send(_mess))
+    # Message received from server
+    data = server.recv(size)
 
-        # Print the received message
-        print 'Received: {}'.format(data)
+    fn_res = handler.handle_requests(message, data)
 
-        if fn_res[1]:
-            break
-    else:
-        print 'Error Accord: {}'.format(res[1])
-        continue
+    # Print the received message
+    print 'Received: {}'.format(data)
+
+    if 'error' in fn_res:
+        print 'Error', fn_res
+        break
 
 server.close()
