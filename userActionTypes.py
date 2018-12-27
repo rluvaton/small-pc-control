@@ -17,11 +17,19 @@ class UserActionType:
             "run program": self.user.run_program,
             "get folder": self.user.get_folder,
             "file content": self.user.get_file_content,
+            "stop keep alive": self.user.stop_keep_alive,
+            "stop heartbeat": self.user.stop_keep_alive,
         }
 
     # Get Function based on action type, if no command then None
     def get_action_fn(self, command):
+        # type: (str) -> {'fn': function, 'error': str}
         if command not in self.UserActionTypes:
-            print 'command {} not founded'.format(command)
-            return None
-        return self.UserActionTypes[command]
+            err_msg = 'command {} not founded'.format(command)
+            print err_msg
+            return {
+                'error': err_msg
+            }
+        return {
+            'fn': self.UserActionTypes[command]
+        }

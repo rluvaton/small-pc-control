@@ -31,15 +31,18 @@ class UserActions:
         pass
 
     def get_request_type(self, content):
+        # type: (str) -> {'type': str, 'body': str, 'error': str}
         """
         Get Request type
         :param content: Content of the request
-        :return: <request-type>, <error-message>
+        :return: The type and the body of the request
         """
         if content is None:
             err_mes = 'content sent can\'t be null'
             print err_mes, content
-            return None, err_mes
+            return {
+                'error': err_mes
+            }
 
         # Split to action type and parameters
         two_parts = content.split(':', 1)
@@ -47,7 +50,9 @@ class UserActions:
         if len(two_parts) == 0:
             err_mes = 'Content Parsing Error'
             print err_mes, two_parts
-            return None, err_mes
+            return {
+                'error': err_mes
+            }
 
         # Remove the leading trailing spaces
         two_parts[0] = str(two_parts[0]).strip().lower()
@@ -56,13 +61,17 @@ class UserActions:
             two_parts.append('')
 
         two_parts[1] = two_parts[1].strip()
-        return two_parts, None
+        return {
+            'type': two_parts[0],
+            'body': two_parts[1]
+        }
 
     def handle_requests(self, content):
+        # type: (str) -> {'message': str, 'error': str, 'close-client': bool}
         """
         Handle Requests
         :param content: content of the message
-        :return: <message>, <have-error>, <close-client>
+        :return: Return the result, message in case of success, if to close the client and error message if there is one
         """
 
         res = self.get_request_type(content)
@@ -70,32 +79,59 @@ class UserActions:
         if res is None:
             err_mes = 'Error occurred at get request type'
             print err_mes
-            return err_mes, True, False
+            return {
+                'error': err_mes,
+                'close-client': False
+            }
 
-        if res[0] is None:
-            err_mes = res[1] if res[1] is None else 'Error ar get request type'
+        if 'error' in res:
+            err_mes = res['error'] if res['error'] is None else 'Error ar get request type'
             print err_mes, res
-            return err_mes, True, False
-
-        res = res[0]
+            return {
+                'error': err_mes,
+                'close-client': False
+            }
 
         from userActionTypes import UserActionType
 
         # Get action Handler Function
-        fn = UserActionType(self).get_action_fn(res[0])
+        user_action = UserActionType(self).get_action_fn(res['type'])
 
         # Not Founded
-        if fn is None:
-            return 'Unknown request: ' + res[0], True, False
+        if 'error' in user_action:
+            return {
+                'error': 'Unknown request: ' + res['type'],
+                'close-client': False
+            }
 
-        res = fn(res[1])
+        res = user_action['fn'](res['body'])
 
         if isinstance(res, basestring) or len(res) == 1:
-            res = res, False, False
+            res = {
+                'message': res,
+                'close-client': False
+            }
 
-        return res[0], \
-               (res[1] if res[1] is not None else False), \
-               (res[2] if res[2] is not None else False)
+        if res['close-client'] is None:
+            res['close-client'] = False
+
+        if res['message'] is None:
+            res['message'] = 'No message provided'
+
+        return res
+
+    def stop_keep_alive(self, content):
+        # type: (str) -> {'message': str, 'error': str, 'close-client': bool}
+        """
+        Stop Keep Alive
+        :param content:
+        :return:
+        """
+        err_msg = 'Not implemented yet'
+        print err_msg
+        return {
+            'error': err_msg
+        }
 
     def get_file_content(self, content):
         """
@@ -108,19 +144,25 @@ class UserActions:
 
         # Check if user logged in before doing any actions
         if not self.user_connected:
-            return 'Login / Register Before doing any action', True, False
+            err_mes = 'Login / Register Before doing any action'
+            return {
+                'error': err_mes
+            }
 
         # Check if path exists
         if not os.path.exists(content):
             err_mes = '{} not exists'.format(content)
             print err_mes
-            return err_mes, True
+            return {
+                'error': err_mes
+            }
 
         # Check if path is a folder
         if os.path.isdir(content):
             err_mes = '{} isn\'t a file'.format(content)
-            print err_mes
-            return err_mes, True
+            return {
+                'error': err_mes
+            }
 
         # Start reading & sending the image
         fp = open(content, 'rb')
@@ -133,6 +175,7 @@ class UserActions:
         fp.close()
 
     def get_folder(self, content):
+        # type: (str) -> {'message': str, 'error': str, 'close-client': bool}
         """
         Open Folder
         :param content: variables in the request (folder path here
@@ -143,19 +186,26 @@ class UserActions:
 
         # Check if user logged in before doing any actions
         if not self.user_connected:
-            return 'Login / Register Before doing any action', True, False
+            err_mes = 'Login / Register Before doing any action'
+            return {
+                'error': err_mes,
+            }
 
         # Check if path exists
         if not os.path.exists(content):
             err_mes = '{} not exists'.format(content)
             print err_mes
-            return err_mes, True
+            return {
+                'error': err_mes,
+            }
 
         # Check if path is directory
         if not os.path.isdir(content):
             err_mes = '{} isn\'t a folder'.format(content)
             print err_mes
-            return err_mes, True
+            return {
+                'error': err_mes,
+            }
 
         try:
             folder_content = os.listdir(content)
@@ -163,9 +213,12 @@ class UserActions:
         except Exception, err:
             err_mes = 'Error getting folder ({}) content, try again later'.format(content)
             print err_mes, err
-            return err_mes, True
+            return {
+                'error': err_mes,
+            }
 
     def run_program(self, content):
+        # type: (str) -> {'message': str, 'error': str, 'close-client': bool}
         """
         Run Program
         :param content: variables in the request (program name here)
@@ -177,7 +230,10 @@ class UserActions:
 
         # Check if user logged in before doing any actions
         if not self.user_connected:
-            return 'Login / Register Before doing any action', True, False
+            err_mes = 'Login / Register Before doing any action'
+            return {
+                'error': err_mes,
+            }
 
         if os.path.isfile(content.replace('"', '')):
             try:
@@ -185,7 +241,9 @@ class UserActions:
             except Exception, err:
                 err_mes = 'Error opening program ({}), try again later'.format(content)
                 print err_mes, err
-                return err_mes, True
+                return {
+                    'error': err_mes,
+                }
 
             return 'Program {} opened'.format(content)
 
@@ -195,9 +253,12 @@ class UserActions:
         except Exception, err:
             err_mes = 'Error opening program ({}), try again later'.format(content)
             print err_mes, err
-            return err_mes, True
+            return {
+                'error': err_mes,
+            }
 
     def send_screen_shot(self, content):
+        # type: (str) -> {'message': str, 'error': str, 'close-client': bool}
         """
         Send Screen shot
         :param content: variables in the request (None in this request)
@@ -206,7 +267,10 @@ class UserActions:
 
         # Check if user logged in before doing any actions
         if not self.user_connected:
-            return 'Login / Register Before doing any action', True, False
+            err_mes = 'Login / Register Before doing any action'
+            return {
+                'error': err_mes,
+            }
 
         im = ImageGrab.grab()
 
@@ -228,16 +292,22 @@ class UserActions:
         # Delete the file
         os.remove(saving_path)
 
-        return 'Image Data', False, False
+        return {
+            'message': 'Image Data'
+        }
 
     def exit(self, content):
+        # type: (str) -> {'message': str, 'error': str, 'close-client': bool}
         """
         Exit connection
         :param content: variables in the request (None in this request)
         :return: <message>, <have-error>, <close-client>
         :notes: Returns the message Bye Bye! and pass close connection flag
         """
-        return 'Bye Bye!', False, True
+        return {
+            'message': 'Bye Bye!',
+            'close-client': True
+        }
 
     def get_pc_name(self, content):
         """
@@ -248,16 +318,22 @@ class UserActions:
 
         # Check if user logged in before doing any actions
         if not self.user_connected:
-            return 'Login / Register Before doing any action', True, False
+            err_mess = 'Login / Register Before doing any action'
+            return {
+                'error': err_mess
+            }
 
         try:
             return os.environ['COMPUTERNAME']
         except Exception, err:
             err_mess = 'Can\'t get computer name, please try again later'
             print err_mess, err
-            return err_mess, True, False
+            return {
+                'error': err_mess
+            }
 
     def time(self, content):
+        # type: (str) -> {'message': str, 'error': str, 'close-client': bool}
         """
         Get Time
         :param content: variables in the request (None in this request)
@@ -266,11 +342,15 @@ class UserActions:
 
         # Check if user logged in before doing any actions
         if not self.user_connected:
-            return 'Login / Register Before doing any action', True, False
+            err_msg = 'Login / Register Before doing any action'
+            return {
+                'error': err_msg
+            }
 
         return str(time.ctime())
 
     def user_login(self, content):
+        # type: (str) -> {'message': str, 'error': str, 'close-client': bool}
         """
         User Login
         :param content: variables in the request (user name and password)
@@ -280,24 +360,31 @@ class UserActions:
         :notes: If no user returning: 'Bad connection parameters'
         """
         if content is None or content.strip() is '':
-            return 'Argument Exception', True, False
+            err_msg = 'Argument Exception'
+            return {
+                'error': err_msg
+            }
+
         params = content.split(' ')
 
         if len(params) != 2:
-            err_message = 'Parameters count can\'t be different than 2 in user login'
-            print err_message
-            return err_message, True, False
+            err_msg = 'Parameters count can\'t be different than 2 in user login'
+            print err_msg
+            return {
+                'error': err_msg
+            }
 
         from userManagement import singleton
 
         res = singleton.search_user_record(params[0], params[1])
 
-        if res[1]:
+        if 'error' not in res:
             self.user_connected = True
 
-        return res[0], not res[1], False
+        return res
 
     def user_register(self, content):
+        # type: (str) -> {'message': str, 'error': str, 'close-client': bool}
         """
         User Register
         :param content: variables in the request (None in this request)
@@ -306,19 +393,24 @@ class UserActions:
         userName 123123
         """
         if content is None or content.strip() is '':
-            return 'Argument Exception', True, False
+            err_msg = 'Argument Exception'
+            return {
+                'error': err_msg
+            }
 
         params = content.split(' ')
 
         if len(params) != 2:
-            err_message = 'Parameters count can\'t be different than 2 in user registration'
-            print err_message
-            return err_message, True, False
+            err_msg = 'Parameters count can\'t be different than 2 in user registration'
+            print err_msg
+            return {
+                'error': err_msg
+            }
 
         from userManagement import singleton
         res = singleton.add_user_record(params[0], params[1])
 
-        if res[1]:
+        if 'error' not in res:
             self.user_connected = True
 
-        return res[0], not res[1], False
+        return res

@@ -7,13 +7,14 @@ mutex = threading.Lock()
 
 # Create MD5
 def compute_MD5_hash(my_string):
+    # type: (str) -> str
     m = hashlib.md5()
     m.update(my_string.encode('utf-8'))
     return m.hexdigest()
 
 
 # Singleton Pattern
-singleton = None
+singleton = None  # type: UserManagement
 
 
 class UserManagement(object):
@@ -41,6 +42,14 @@ class UserManagement(object):
     # If user already exists return 'User Already exists for this User Name'
     # If Error at reading file return 'Error occurred, try again later'
     def add_user_record(self, username, password):
+        # type: (str, str) -> {'message': str, 'error': str}
+        """
+        Update Users File
+        :param username: username (unique) of the new user
+        :param password: password of the new user
+        :return: object with key message in case of success and key error in case of an error
+        :note: username must be unique
+        """
         if username is None or password is None:
             return 'Argument Exception', False
 
@@ -75,7 +84,9 @@ class UserManagement(object):
 
                     if founded:
                         fp.close()
-                        return 'User Already exists for this User Name', True
+                        return {
+                            'err_msg': 'User Already exists for this User Name'
+                        }
 
                     fp.writelines(cmp_record + '\n')
                     fp.close()
@@ -83,25 +94,36 @@ class UserManagement(object):
                     fp.close()
                     err_msg = 'Error occurred, try again later'
                     print err_msg, ex
-                    return err_msg, False
+                    return {
+                        'err_msg': err_msg
+                    }
 
             # Release the lock
             mutex.release()
         except Exception, ex:
             err_msg = 'Error occurred, try again later'
             print err_msg, ex
-            return err_msg, False
+            return {
+                'err_msg': err_msg
+            }
 
-        return 'User registered successfully', True
+        return {
+            'message': 'User registered successfully'
+        }
 
-    # Search User
-    # -----------
-    # Return Success message
-    # If user not founded return 'Bad connection parameters' message
-    # If Error at reading file return 'Error occurred, try again later'
     def search_user_record(self, username, password):
+        # type: (str, str) -> {'message': str, 'error': str}
+        """
+        Search User
+        :param username: username
+        :param password: user password
+        :return: return object that contain error in case of an error
+        """
         if username is None or password is None:
-            return 'Argument Exception', False
+            err_msg = 'Argument Exception'
+            return {
+                'error': err_msg
+            }
 
         try:
 
@@ -110,7 +132,9 @@ class UserManagement(object):
             if not res:
                 err_msg = 'Error occurred, Stupid mutex (try again later)'
                 print err_msg
-                return err_msg, False
+                return {
+                    'error': err_msg
+                }
 
             # a opening type:
             # Opens a file for appending.
@@ -137,18 +161,24 @@ class UserManagement(object):
                     mutex.release()
 
                     fp.close()
-                    return 'User logged in successfully', True
+                    return {
+                        'message': 'User logged in successfully'
+                    }
 
                 fp.close()
 
                 # Release the lock
                 mutex.release()
 
-                return 'Bad connection parameters', False
+                return {
+                    'error': 'Bad connection parameters'
+                }
         except Exception, ex:
             err_msg = 'Error occurred, try again later'
             print err_msg, ex
-            return err_msg, False
+            return {
+                'error': err_msg
+            }
 
 
 # Singleton Pattern

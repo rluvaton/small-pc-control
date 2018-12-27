@@ -2,19 +2,22 @@
 from threading import Timer
 import time
 
+from user import User
 
+
+# Heartbeat
 class HeartBeat(object):
+    users = None  # type: List[User]
+
     def __init__(self, message = 'HB',
                  response = 'T',
                  send_callback = None,
                  timeout = 5,
                  response_limit_timeout = 5,
                  response_limit_passed_callback = None,
-                 sockets = None):
-        # create the queue
-        # create the sockets
-        if sockets is None:
-            sockets = []
+                 users = None):
+        if users is None:
+            users = []
 
         if response_limit_passed_callback is None:
             def response_limit_passed_callback(client):
@@ -41,54 +44,52 @@ class HeartBeat(object):
         # Declare the timer
         self.timer = None
 
-        if sockets is None or len(sockets) == 0:
-            sockets = []
-            self.sockets = sockets
+        if users is None or len(users) == 0:
+            users = []
+            self.users = users
         else:
-            self.sockets = sockets
+            self.users = users
             self.run_heartbeat = True
             self.run()
 
-    def insert_socket(self, socket):
+    def add(self, user):
         """
         Insert new socket for the heartbeat technique
-        :param socket: user socket
+        :type user: User
+        :param user: User
         """
-        socket.settimeout(self.response_limit_timeout)
+        user.heartbeat_socket.settimeout(self.response_limit_timeout)
 
-        self.sockets.append(socket)
+        self.users.append(user)
 
         # If the first socket added then start the heartbeat technique
-        if len(self.sockets) == 1:
+        if len(self.users) == 1:
             self.run_heartbeat = True
             self.run()
 
-    def remove_socket(self, socket):
+    def remove(self, user):
         """
         Remove socket from the heartbeat
-        :param socket: Socket to remove
+        :type user: User
+        :param user: Socket to remove
         """
 
-        socket.settimeout(None)
+        user.heartbeat_socket.settimeout(None)
 
-        if socket in self.sockets:
-            self.sockets.remove(socket)
+        if user in self.users:
+            self.users.remove(user)
 
         # If the last socket removed then stop the heartbeat technique
-        if len(self.sockets) == 0:
+        if len(self.users) == 0:
             self.run_heartbeat = False
 
     def receive_every_seconds_method(self):
-        for socket in self.sockets:
+        for user in self.users:  # type: User
             try:
-                response = socket.recv(self.response_bytes_size)
-                if response == self.heartbeat_res:
-                    print 'socket answered answer'
-                else:
-                    print 'socket didn\'t answer, response: {}'.format(response)
+                user.receive(self.response_bytes_size, False)
             except Exception, e:
-                print 'Connection to remote expired'
-                self.remove_socket(socket)
+                self.response_limit_passed_callback(user)
+                self.remove(user)
 
         # Here we put the received data into the queue
         # self.the_queue.put(self.receiving_socket.recv())
@@ -97,12 +98,12 @@ class HeartBeat(object):
         if not self.run_heartbeat:
             return
 
-        for item in self.sockets:
+        for user in self.users:
             try:
-                self.send_callback(item, self.heartbeat_ms)
+                self.send_callback(user, self.heartbeat_ms)
             except Exception, e:
                 print 'Error accrued, removing socket...'
-                self.remove_socket(item)
+                self.remove(user)
 
         # while not self.the_queue.empty():
         #     self.emission_socket.send(self.the_queue.get())
