@@ -51,7 +51,9 @@ class UserManagement(object):
         :note: username must be unique
         """
         if username is None or password is None:
-            return 'Argument Exception', False
+            return {
+                'error': 'Argument Exception'
+            }
 
         try:
             # Lock the resource
@@ -59,7 +61,9 @@ class UserManagement(object):
             if not res:
                 err_msg = 'Error occurred, Stupid mutex (try again later)'
                 print err_msg
-                return err_msg, False
+                return {
+                    'error': err_msg
+                }
 
             # a opening type:
             # Opens a file for appending.
@@ -84,18 +88,24 @@ class UserManagement(object):
 
                     if founded:
                         fp.close()
+
+                        # Release the lock
+                        mutex.release()
                         return {
-                            'err_msg': 'User Already exists for this User Name'
+                            'error': 'User Already exists for this User Name'
                         }
 
                     fp.writelines(cmp_record + '\n')
                     fp.close()
                 except Exception, ex:
                     fp.close()
+
+                    # Release the lock
+                    mutex.release()
                     err_msg = 'Error occurred, try again later'
                     print err_msg, ex
                     return {
-                        'err_msg': err_msg
+                        'error': err_msg
                     }
 
             # Release the lock
@@ -104,7 +114,7 @@ class UserManagement(object):
             err_msg = 'Error occurred, try again later'
             print err_msg, ex
             return {
-                'err_msg': err_msg
+                'error': err_msg
             }
 
         return {
@@ -132,6 +142,9 @@ class UserManagement(object):
             if not res:
                 err_msg = 'Error occurred, Stupid mutex (try again later)'
                 print err_msg
+
+                # Release the lock
+                mutex.release()
                 return {
                     'error': err_msg
                 }

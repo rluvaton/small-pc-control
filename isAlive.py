@@ -1,6 +1,7 @@
 # Timer
 from threading import Timer
 import time
+import socket
 
 from user import User
 
@@ -67,12 +68,19 @@ class HeartBeat(object):
             self.run_heartbeat = True
             self.run()
 
-    def remove(self, user):
+    def remove(self, user, close = False):
         """
         Remove socket from the heartbeat
+        :param close: Close user connection
         :type user: User
         :param user: Socket to remove
         """
+
+        if user is None or user.heartbeat_socket is None:
+            print 'User None already'
+            return
+
+        user.open = False
 
         user.heartbeat_socket.settimeout(None)
 
@@ -82,6 +90,9 @@ class HeartBeat(object):
         # If the last socket removed then stop the heartbeat technique
         if len(self.users) == 0:
             self.run_heartbeat = False
+
+        if close:
+            user.close()
 
     def receive_every_seconds_method(self):
         for user in self.users:  # type: User
@@ -101,6 +112,10 @@ class HeartBeat(object):
         for user in self.users:
             try:
                 self.send_callback(user, self.heartbeat_ms)
+            except socket.timeout:
+                if self.run_heartbeat and user.open:
+                    print 'Closing connection...'
+                break
             except Exception, e:
                 print 'Error accrued, removing socket...'
                 self.remove(user)

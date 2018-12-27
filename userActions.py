@@ -106,31 +106,30 @@ class UserActions:
 
         res = user_action['fn'](res['body'])
 
-        if isinstance(res, basestring) or len(res) == 1:
+        if isinstance(res, basestring):
             res = {
                 'message': res,
                 'close-client': False
             }
 
-        if res['close-client'] is None:
+        if 'close-client' not in res:
             res['close-client'] = False
 
-        if res['message'] is None:
+        if 'error' not in res and 'message' not in res:
             res['message'] = 'No message provided'
 
         return res
 
     def stop_keep_alive(self, content):
-        # type: (str) -> {'message': str, 'error': str, 'close-client': bool}
+        # type: (str) -> {'stop-heartbeat': bool, 'message': str, 'error': str, 'close-client': bool}
         """
         Stop Keep Alive
         :param content:
         :return:
         """
-        err_msg = 'Not implemented yet'
-        print err_msg
         return {
-            'error': err_msg
+            'message': 'Stopping heartbeat',
+            'stop-heartbeat': True
         }
 
     def get_file_content(self, content):

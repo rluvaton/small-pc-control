@@ -15,6 +15,7 @@ class User(object):
 
         self.user_actions = None
         self.main_socket = socket
+        self.open = True
 
         if self.main_socket is not None:
             self.user_actions = UserActions(lambda data: self.send(data, True))
@@ -46,4 +47,10 @@ class User(object):
         self.main_socket.send(message) if main else self.heartbeat_socket.send(message)
 
     def receive(self, size, main = True):
-        return self.main_socket.recv(size) if main else self.heartbeat_socket.recv(size)
+        data = None
+        if main:
+            data = self.main_socket.recv(size)
+        else:
+            data = self.heartbeat_socket.recv(size)
+
+        return data

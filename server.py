@@ -99,7 +99,7 @@ def heartbeat_user_handler(is_alive, user_socket):
     users[auth_token] = user
 
     # Insert the user to the heartbeat
-    # is_alive.add(user)
+    is_alive.add(user)
 
 
 def run_heartbeat():
@@ -159,7 +159,7 @@ def handle_client_connection(client_socket):
     user.set_main_socket(client_socket)
 
     # Insert the user to the heartbeat
-    is_alive.add(user)
+    # is_alive.add(user)
 
     while True:
         try:
@@ -190,14 +190,20 @@ def handle_client_connection(client_socket):
 
             print ' ------------------- '
 
-            if res['stop-heartbeat']:
+            if 'stop-heartbeat' in res and res['stop-heartbeat']:
                 is_alive.remove(user)
+                # user.close()
+
+                def response_limit_passed_callback():
+                    is_alive.response_limit_passed_callback(user)
 
                 # Set timer to run until the response timeout (as requested in the exercise)
-                Timer(is_alive.response_limit_timeout, is_alive.send_data_later).start()
+                Timer(is_alive.response_limit_timeout, response_limit_passed_callback).start()
+                break
 
             # Close client
-            if res['close-client']:
+            elif 'close-client' in res and res['close-client']:
+                is_alive.remove(user, True)
                 user.close()
                 break
         except Exception, e:
