@@ -82,10 +82,10 @@ class ResponseHandler:
                 'error': err_mes,
                 'close-client': False
             }
-        from userActionType import get_action_fn
+        from userActionType import UserActionType
 
         # Get action Handler Function
-        user_action = get_action_fn(res['type'])
+        user_action = UserActionType(self).get_action_fn(res['type'])
 
         # Not Founded
         if 'fn' not in user_action:
@@ -100,10 +100,10 @@ class ResponseHandler:
                 'close-client': False
             }
 
-        if res['close-client'] is None:
+        if 'close-client' not in res:
             res['close-client'] = False
 
-        if res['message'] is None:
+        if 'message' not in res:
             res['message'] = 'No message provided'
 
         return res
@@ -115,6 +115,11 @@ class ResponseHandler:
 
     def exit_handler(self, content):
         print ' -- Exiting -- '
+        return {
+            'close-client': True
+        }
+
+    def stop_heartbeat(self, content):
         return {
             'close-client': True
         }
@@ -175,71 +180,4 @@ class ResponseHandler:
         return {
             'message': 'Success'
         }
-
-
-class ResponseHandler1:
-    def __init__(self):
-        pass
-
-
-    # Handle Requests
-    # Return Tuple that (<messages>, <have-error>, <close-client>)
-    def handle_requests(self, request, response, get_more_data, get_server_name):
-        res = ResponseHandler.get_request_type(request)
-
-        if res is None:
-            err_mes = 'Error Accord at get request type'
-            print err_mes
-            return err_mes, False
-
-        if res[0] is None:
-            err_mes = res[1] if res[1] is None else 'Error ar get request type'
-            print err_mes, res
-            return err_mes, False
-
-        res = res[0]
-
-        from userActionType import get_action_fn
-
-        # Get action Handler Function
-        action_fn = get_action_fn(res[0])
-
-        # Not Founded
-        if 'error' in action_fn:
-            return {
-                'error': action_fn['error']
-            }
-
-        fn_res = action_fn['fn'](request, response, get_more_data, get_server_name)
-
-        if isinstance(fn_res, basestring):
-            fn_res = fn_res, False
-
-        return fn_res[0], fn_res[1]
-
-    # Get Request type
-    # Return Tuple that (request-type, <error-message>)
-    @staticmethod
-    def get_request_type(content):
-        if content is None:
-            err_mes = 'content sent can\'t be null'
-            print err_mes, content
-            return None, err_mes
-
-        # Split to action type and parameters
-        two_parts = content.split(':', 1)
-
-        if len(two_parts) == 0:
-            err_mes = 'Content Parsing Error'
-            print err_mes, two_parts
-            return None, err_mes
-
-        # Remove the leading trailing spaces
-        two_parts[0] = str(two_parts[0]).strip().lower()
-
-        if len(two_parts) < 2:
-            two_parts.append('')
-
-        two_parts[1] = two_parts[1].strip()
-        return two_parts, None
 

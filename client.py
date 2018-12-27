@@ -30,6 +30,8 @@ heartbeat_request_byte_size = get_string_size(heartbeat_request_ms)
 # The response of client after each heartbeat
 heartbeat_response_ms = 'T'
 
+heartbeat = True
+
 # endregion
 
 # Buffer Size
@@ -77,14 +79,17 @@ def init_heartbeat():
 
 
 def run_heartbeat():
-    while True:
+    heartbeat_request_timeout = 10
+    heartbeat_server.settimeout(heartbeat_request_timeout)
 
-        if not heartbeat_server:
-            print 'Heartbeat Server Disconnected'
+    while heartbeat:
+        try:
+            # Message received from server
+            heartbeat_server.recv(heartbeat_request_byte_size)
+        except socket.timeout:
+            if heartbeat:
+                print 'Connection was closed'
             break
-
-        # Message received from server
-        heartbeat_server.recv(heartbeat_request_byte_size)
 
         # Message sent to server
         heartbeat_server.send(heartbeat_response_ms)
@@ -164,6 +169,10 @@ while True:
 
     # Print the received message
     print 'Received: {}'.format(data)
+
+    if 'close-client' in data and data['close-client']:
+        heartbeat = False
+        break
 
     if 'error' in fn_res:
         print 'Error', fn_res

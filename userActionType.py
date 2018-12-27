@@ -1,17 +1,23 @@
-from responseHandle import ResponseHandler
 
-# User Action Types
-UserActionTypes = {
-    "name": ResponseHandler.server_name_handler,
-    "exit": ResponseHandler.exit_handler,
-    "screenshot": ResponseHandler.screenshot_handler,
-}
+# User Action Type
+class UserActionType:
 
+    def __init__(self, handler):
+        self.handler = handler
 
-# Get Function based on action type, if no command then None
-def get_action_fn(command):
-    if command not in UserActionTypes:
-        return {}
-    return {
-        'fn': UserActionTypes[command]
-    }
+        # User Action Types
+        self.UserActionTypes = {
+            "name": self.handler.server_name_handler,
+            "exit": self.handler.exit_handler,
+            "screenshot": self.handler.screenshot_handler,
+            "stop keep alive": self.handler.stop_heartbeat,
+            "stop heartbeat": self.handler.stop_heartbeat,
+        }
+
+    # Get Function based on action type, if no command then None
+    def get_action_fn(self, command):
+        if command not in self.UserActionTypes:
+            return {}
+        return {
+            'fn': self.UserActionTypes[command]
+        }
