@@ -59,8 +59,6 @@ class ResponseHandler:
         if save_path is None:
             return None, False
 
-        index = 0
-
         try:
 
             fp = open(fname,'wb')
