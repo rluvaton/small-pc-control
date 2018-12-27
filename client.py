@@ -79,14 +79,24 @@ def init_heartbeat():
 
 
 def run_heartbeat():
+    global heartbeat
+
     heartbeat_request_timeout = 10
     heartbeat_server.settimeout(heartbeat_request_timeout)
+    try:
+        # Message received from server
+        heartbeat_server.recv(heartbeat_request_byte_size)
+    except socket.timeout, e:
+        heartbeat = False
+        print 'Connection Closed (Heartbeat)'
 
+    heartbeat_request_timeout = 10
     while heartbeat:
         try:
             # Message received from server
-            print heartbeat_server.recv(heartbeat_request_byte_size)
-        except socket.timeout:
+            heartbeat_server.recv(heartbeat_request_byte_size)
+        except socket.timeout, e:
+            print e
             if heartbeat:
                 print 'Connection was closed'
             break
