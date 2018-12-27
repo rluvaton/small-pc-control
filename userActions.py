@@ -197,8 +197,6 @@ class UserActions:
             print err_mes, err
             return err_mes, True
 
-        return 'Program {} opened'.format(content)
-
     def send_screen_shot(self, content):
         """
         Send Screen shot

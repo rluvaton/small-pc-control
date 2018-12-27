@@ -1,9 +1,11 @@
 # Imports
 import socket
 import threading
+from isAlive import HeartBeat
 
 bind_ip = '0.0.0.0'
 bind_port = 9999
+bind_heartbeat_port = 9998
 
 # Local host
 bind_ip = '127.0.0.1'
@@ -15,13 +17,53 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((bind_ip, bind_port))
 server.listen(5)  # max backlog of connections
 
+# Create Heartbeat Socket
+heartbeat_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+heartbeat_server.bind((bind_ip, bind_heartbeat_port))
+heartbeat_server.listen(5)  # max backlog of connections
+
 # Listen Info
 print 'Listening on {}:{}'.format(bind_ip, bind_port)
+
+print 'Heartbeat: Listening on {}:{}'.format(bind_ip, bind_heartbeat_port)
+
+
+def run_heartbeat():
+    # Heartbeat passed callback
+    def heartbeat_passed(client):
+        print 'Heartbeat limit passed', client
+
+    def send_message(user, message):
+        user.send(message)
+
+    is_alive = HeartBeat('HB', 'T', send_message, 5, 10, heartbeat_passed)
+
+    def heartbeat_user_handler(user):
+        is_alive.insert_socket(user)
+
+    # Start The Server
+    while True:
+        heartbeat_client_sock, address = heartbeat_server.accept()
+        print 'Accepted connection from {}:{}'.format(address[0], address[1])
+        heartbeat_client_handler = threading.Thread(
+            target = heartbeat_user_handler,
+            args = (heartbeat_client_sock,)
+            # without comma you'd get error:
+            # Error: a... TypeError: handle_client_connection() argument after * must be a sequence, not _socketobject
+        )
+        heartbeat_client_handler.start()
+
+
+threading.Thread(
+    target = run_heartbeat,
+    args = ()
+    # without comma you'd get error:
+    # Error: a... TypeError: handle_client_connection() argument after * must be a sequence, not _socketobject
+).start()
 
 
 # New Client Connection Handler
 def handle_client_connection(client_socket):
-
     from userActions import UserActions
     user_actions = UserActions(lambda data: client_socket.send(data))
 
