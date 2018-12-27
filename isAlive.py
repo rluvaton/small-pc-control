@@ -98,9 +98,12 @@ class HeartBeat(object):
         for user in self.users:  # type: User
             try:
                 user.receive(self.response_bytes_size, False)
-            except Exception, e:
-                self.response_limit_passed_callback(user)
-                self.remove(user)
+            except socket.timeout, e:
+                if user.open:
+                    self.response_limit_passed_callback(user)
+                    self.remove(user)
+
+        return True
 
         # Here we put the received data into the queue
         # self.the_queue.put(self.receiving_socket.recv())
@@ -132,6 +135,6 @@ class HeartBeat(object):
 
     def run(self):
         self.schedule()
-        while self.run_heartbeat:  # this is the stop condition
-            self.receive_every_seconds_method()
-            time.sleep(self.timeout)
+        time.sleep(2)
+        while self.receive_every_seconds_method():
+            pass
