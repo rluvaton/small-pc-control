@@ -4,6 +4,7 @@ import threading
 
 from responseHandle import ResponseHandler
 from utils import *
+from heartbeat import Heartbeat
 
 target_ip = '127.0.0.1'
 
@@ -18,19 +19,30 @@ target_port = 9999
 
 # region Heartbeat variables
 
-# The server
-heartbeat_server = None
 
+# The server
 target_heartbeat_port = 9998
 
 # The request the server sent to client every 5 seconds
 heartbeat_request_ms = 'HB'
-heartbeat_request_byte_size = get_string_size(heartbeat_request_ms)
 
 # The response of client after each heartbeat
 heartbeat_response_ms = 'T'
 
-heartbeat = True
+is_heartbeat_connected = True
+
+
+def get_is_heartbeat_connected():
+    return is_heartbeat_connected
+
+
+def set_is_heartbeat_connected(value):
+    global is_heartbeat_connected
+    is_heartbeat_connected = value
+
+
+heartbeat = Heartbeat(target_ip, target_port, heartbeat_response_ms, heartbeat_request_ms, 10,
+                      get_is_heartbeat_connected, set_is_heartbeat_connected)
 
 # endregion
 
@@ -39,75 +51,6 @@ size = 4096
 
 if request_valid_response("Custom IP ?", 'y', 'n'):
     target_ip = raw_input("Your IP Is: ").strip()
-
-
-# region Heartbeat Functions
-
-# Init Heartbeat Server
-def init_heartbeat():
-    """
-    Init Heartbeat Server
-    :return: The unique key to start connecting with the main server
-    :type: () -> str
-    """
-    global heartbeat_server
-
-    # create an ipv4 (AF_INET) socket object using the tcp protocol (SOCK_STREAM)
-    heartbeat_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    print '\tHeartbeat Server:'
-    print '\t\tConnecting...'
-
-    # connect the server
-    heartbeat_server.connect((target_ip, target_heartbeat_port))
-
-    print '\t\tConnection {}:{} Established'.format(target_ip, target_heartbeat_port)
-    print '\t\tGetting Unique Auth Token...'
-
-    # Set Timeout until the server returns the token
-    heartbeat_token_timeout = 7
-    heartbeat_server.settimeout(heartbeat_token_timeout)
-
-    token = heartbeat_server.recv(size)
-
-    # Remove the timeout
-    heartbeat_server.settimeout(None)
-
-    print 'Token', token
-
-    return token
-
-
-def run_heartbeat():
-    global heartbeat
-
-    heartbeat_request_timeout = 10
-    heartbeat_server.settimeout(heartbeat_request_timeout)
-    try:
-        # Message received from server
-        heartbeat_server.recv(heartbeat_request_byte_size)
-    except socket.timeout, e:
-        heartbeat = False
-        print 'Connection Closed (Heartbeat)'
-
-    heartbeat_request_timeout = 10
-    while heartbeat:
-        try:
-            # Message received from server
-            heartbeat_server.recv(heartbeat_request_byte_size)
-        except socket.timeout, e:
-            print e
-            if heartbeat:
-                print 'Connection was closed'
-            break
-
-        # Message sent to server
-        heartbeat_server.send(heartbeat_response_ms)
-
-    heartbeat_server.close()
-
-
-# endregion
 
 
 # Init Server - Declare, Connect and wait for ready
@@ -147,11 +90,11 @@ def init_server(unique):
 
 
 print 'Initializing...'
-init_server(init_heartbeat())
+init_server(heartbeat.connect())
 
 # Create Thread of the run heartbeat
 threading.Thread(
-    target = run_heartbeat,
+    target = heartbeat.run,
     args = ()
     # without comma you'd get error:
     # Error: a... TypeError: handle_client_connection() argument after * must be a sequence, not _socketobject
@@ -181,7 +124,7 @@ while True:
     print 'Received: {}'.format(data)
 
     if 'close-client' in fn_res and fn_res['close-client']:
-        heartbeat = False
+        is_heartbeat_connected = False
         break
 
     if 'error' in fn_res:
