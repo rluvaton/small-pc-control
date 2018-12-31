@@ -413,3 +413,6 @@ class UserActions:
             self.user_connected = True
 
         return res
+
+    def help(self, content):
+        return
