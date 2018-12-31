@@ -1,8 +1,7 @@
 # Imports
 import socket
-import threading
 import time
-from threading import Timer
+from threading import Timer, Thread
 
 from userManagement import compute_MD5_hash
 from isAlive import HeartBeat
@@ -79,11 +78,11 @@ def heartbeat_send(user, message):
     user.send(message, False)
 
 
-def heartbeat_user_handler(is_alive, user_socket):
+def heartbeat_user_handler(heartbeat, user_socket):
     # type: (HeartBeat, socket.socket) -> None
     """
     New User Connection Handler
-    :param is_alive: Heartbeat class instance
+    :param heartbeat: Heartbeat class instance
     :param user_socket: User socket that connected
     """
     user = User(None, user_socket)  # type: User
@@ -99,7 +98,9 @@ def heartbeat_user_handler(is_alive, user_socket):
     users[auth_token] = user
 
     # Insert the user to the heartbeat
-    is_alive.add(user)
+    heartbeat.add(user)
+
+    print user
 
 
 def run_heartbeat():
@@ -107,14 +108,16 @@ def run_heartbeat():
     Start Heartbeat Server
     """
     global is_alive
+    global heartbeat_server
+
     is_alive = HeartBeat('HB', 'T', heartbeat_send, 5, 10, heartbeat_timeout_end)
 
     # Start The Server
     while True:
         heartbeat_client_sock, heartbeat_address = heartbeat_server.accept()
 
-        print 'Accepted connection from {}:{}'.format(heartbeat_address[0], heartbeat_address[1])
-        heartbeat_client_handler = threading.Thread(
+        print 'Accepted Heartbeat connection from {}:{}'.format(heartbeat_address[0], heartbeat_address[1])
+        heartbeat_client_handler = Thread(
             target = heartbeat_user_handler,
             args = (is_alive, heartbeat_client_sock,)
         )
@@ -125,7 +128,7 @@ init_heartbeat_server()
 init_main_server()
 
 # Start running the heartbeat
-threading.Thread(
+Thread(
     target = run_heartbeat,
     args = ()
     # without comma you'd get error:
@@ -217,7 +220,7 @@ def handle_client_connection(client_socket):
 while True:
     client_sock, address = server.accept()
     print 'Accepted connection from {}:{}'.format(address[0], address[1])
-    client_handler = threading.Thread(
+    client_handler = Thread(
         target = handle_client_connection,
         args = (client_sock,)
         # without comma you'd get error:
