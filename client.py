@@ -15,6 +15,9 @@ server = None
 
 target_port = 9999
 
+# Buffer Size
+size = 4096
+
 # endregion
 
 # region Heartbeat variables
@@ -42,12 +45,9 @@ def set_is_heartbeat_connected(value):
 
 
 heartbeat = Heartbeat(target_ip, target_heartbeat_port, heartbeat_response_ms, heartbeat_request_ms, 10,
-                      get_is_heartbeat_connected, set_is_heartbeat_connected)
+                      get_is_heartbeat_connected, set_is_heartbeat_connected, size)
 
 # endregion
-
-# Buffer Size
-size = 4096
 
 if request_valid_response("Custom IP ?", 'y', 'n'):
     target_ip = raw_input("Your IP Is: ").strip()
