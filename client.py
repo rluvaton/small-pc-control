@@ -41,7 +41,7 @@ def set_is_heartbeat_connected(value):
     is_heartbeat_connected = value
 
 
-heartbeat = Heartbeat(target_ip, target_port, heartbeat_response_ms, heartbeat_request_ms, 10,
+heartbeat = Heartbeat(target_ip, target_heartbeat_port, heartbeat_response_ms, heartbeat_request_ms, 10,
                       get_is_heartbeat_connected, set_is_heartbeat_connected)
 
 # endregion
