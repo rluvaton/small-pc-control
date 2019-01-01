@@ -82,8 +82,6 @@ class HeartBeat(object):
 
         user.open = False
 
-        user.heartbeat_socket.settimeout(None)
-
         if user in self.users:
             self.users.remove(user)
 
@@ -97,13 +95,16 @@ class HeartBeat(object):
     def receive_every_seconds_method(self):
         for user in self.users:  # type: User
             try:
-                user.receive(self.response_bytes_size, False)
+                result = user.receive(self.response_bytes_size, False)
+                if result is None:
+                    self.remove(user)
+                    return self.run_heartbeat
             except socket.timeout, e:
                 if user.open:
                     self.response_limit_passed_callback(user)
                     self.remove(user)
 
-        return True
+        return self.run_heartbeat
 
         # Here we put the received data into the queue
         # self.the_queue.put(self.receiving_socket.recv())

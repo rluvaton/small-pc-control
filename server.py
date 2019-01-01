@@ -70,17 +70,6 @@ def init_heartbeat_server():
     heartbeat_server.listen(5)  # max backlog of connections
 
 
-def heartbeat_timeout_end(user):
-    # type: (User) -> None
-    """
-    Handler when user didn't response to the heartbeat
-    :param user: user that his timeout ended
-    """
-
-    print 'Connection to remote expired'
-    user.close()
-
-
 def heartbeat_send(user, message):
     # type: (User, str) -> None
     """
@@ -88,6 +77,7 @@ def heartbeat_send(user, message):
     :param user: User that need to send to
     :param message: Message to sent
     """
+    print 'send ', message
     user.send(message, False)
 
 
@@ -113,8 +103,6 @@ def heartbeat_user_handler(heartbeat, user_socket):
     # Insert the user to the heartbeat
     heartbeat.add(user)
 
-    print user
-
 
 def run_heartbeat():
     """
@@ -123,7 +111,7 @@ def run_heartbeat():
     global is_alive
     global heartbeat_server
 
-    is_alive = HeartBeat('HB', 'T', heartbeat_send, 5, 10, heartbeat_timeout_end)
+    is_alive = HeartBeat('HB', 'T', heartbeat_send, 5, 10)
 
     # Start The Server
     while True:
@@ -137,16 +125,17 @@ def run_heartbeat():
         heartbeat_client_handler.start()
 
 
-init_heartbeat_server()
-init_main_server()
+if __name__ == '__main__':
+    init_heartbeat_server()
+    init_main_server()
 
-# Start running the heartbeat
-Thread(
-    target = run_heartbeat,
-    args = ()
-    # without comma you'd get error:
-    # Error: a... TypeError: handle_client_connection() argument after * must be a sequence, not _socketobject
-).start()
+    # Start running the heartbeat
+    Thread(
+        target = run_heartbeat,
+        args = ()
+        # without comma you'd get error:
+        # Error: a... TypeError: handle_client_connection() argument after * must be a sequence, not _socketobject
+    ).start()
 
 
 # New Client Connection Handler
@@ -183,9 +172,11 @@ def handle_client_connection(client_socket):
             request = user.receive(size, True)
 
             # Check if disconnected
-            if not request:
-                print 'Client Disconnected'
+            if request is None:
+                print '\nClient Disconnected'
                 break
+
+            print ' ------------------- '
 
             print 'Received | {}'.format(request)
 
@@ -196,6 +187,7 @@ def handle_client_connection(client_socket):
 
             if 'error' in res:
                 response = res['error']
+                response = 'Error: ' + response
                 print 'Error occurred: {}'.format(res['error'])
             else:
                 response = res['message']
@@ -204,23 +196,13 @@ def handle_client_connection(client_socket):
             # Response to client
             user.send(response, True)
 
-            print ' ------------------- '
-
             if 'stop-heartbeat' in res and res['stop-heartbeat']:
                 is_alive.remove(user)
-                # user.close()
-
-                def response_limit_passed_callback():
-                    is_alive.response_limit_passed_callback(user)
-
-                # Set timer to run until the response timeout (as requested in the exercise)
-                Timer(is_alive.response_limit_timeout, response_limit_passed_callback).start()
                 break
 
             # Close client
             elif 'close-client' in res and res['close-client']:
                 is_alive.remove(user, True)
-                user.close()
                 break
         except Exception, e:
             user.close()
@@ -229,14 +211,15 @@ def handle_client_connection(client_socket):
             break
 
 
-# Start Running The Request Server
-while True:
-    client_sock, address = server.accept()
-    print 'Accepted connection from {}:{}'.format(address[0], address[1])
-    client_handler = Thread(
-        target = handle_client_connection,
-        args = (client_sock,)
-        # without comma you'd get error:
-        # Error: a... TypeError: handle_client_connection() argument after * must be a sequence, not _socketobject
-    )
-    client_handler.start()
+if __name__ == '__main__':
+    # Start Running The Request Server
+    while True:
+        client_sock, address = server.accept()
+        print 'Accepted connection from {}:{}'.format(address[0], address[1])
+        client_handler = Thread(
+            target = handle_client_connection,
+            args = (client_sock,)
+            # without comma you'd get error:
+            # Error: a... TypeError: handle_client_connection() argument after * must be a sequence, not _socketobject
+        )
+        client_handler.start()
