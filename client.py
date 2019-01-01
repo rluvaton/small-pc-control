@@ -6,6 +6,7 @@ import sys
 from responseHandle import ResponseHandler
 from utils import *
 from heartbeat import Heartbeat
+from userActionType import complete_help_message
 
 target_ip = '127.0.0.1'
 
@@ -91,7 +92,7 @@ def init_server(unique):
 
     print '\t\tServer Ready'
 
-    print '\nYou Can Start Typing...'
+    print '\nYou Can Start Typing, type help for all the functions and their explanations...'
 
 
 if __name__ == '__main__':
@@ -109,6 +110,9 @@ if __name__ == '__main__':
     while True:
         # ask the server whether he wants to continue
         message = raw_input("> ")
+        if message.lower() == 'help':
+            print complete_help_message
+            continue
         print 'send: {}'.format(message)
 
         if not server:
