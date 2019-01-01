@@ -14,6 +14,8 @@ def set_is_connected_default(value):
 
 
 class Heartbeat(object):
+    heartbeat_server = None  # type: socket.socket
+
     def __init__(self, ip, port, client_response_ms, server_request_ms, server_request_timeout = 10, get_is_connected = get_is_connected_default,
                  set_is_connected = set_is_connected_default, token_size = 4096,
                  token_timeout = 10):
@@ -34,6 +36,8 @@ class Heartbeat(object):
         self.set_is_connected = set_is_connected
 
         self.heartbeat_server = None
+
+        self.socket_offline = False
 
     # Init Heartbeat Server
     def connect(self):
@@ -69,23 +73,39 @@ class Heartbeat(object):
     def run(self):
         self.heartbeat_server.settimeout(self.server_req_timeout)
         try:
-            # Message received from server
-            self.heartbeat_server.recv(self.server_req_size)
-        except socket.timeout, e:
-            self.set_is_connected(False)
-            print 'Connection Closed (Heartbeat)'
-
-        while self.get_is_connected():
-            try:
+            if not self.socket_offline:
                 # Message received from server
                 self.heartbeat_server.recv(self.server_req_size)
+        except socket.timeout, e:
+            if not self.socket_offline:
+                self.set_is_connected(False)
+                self.socket_offline = True
+                print 'Connection to remote expired'
+                self.close()
+
+        while not self.socket_offline:
+            try:
+                if not self.socket_offline:
+                    # Message received from server
+                    self.heartbeat_server.recv(self.server_req_size)
             except socket.timeout, e:
                 print e
-                if self.get_is_connected():
-                    print 'Connection was closed'
+                # if self.get_is_connected() and not self.socket_offline:
+                print 'Connection to remote expired'
+                self.close()
+                self.socket_offline = True
                 break
 
-            # Message sent to server
-            self.heartbeat_server.send(self.client_res_ms)
+            if not self.socket_offline:
+                # Message sent to server
+                self.heartbeat_server.send(self.client_res_ms)
 
         self.heartbeat_server.close()
+
+    def close(self, callback = None):
+        if self.heartbeat_server.shutdown(0) == -1:
+            print 'failure at shutdown heartbeat socket'
+        self.heartbeat_server.close()
+        self.socket_offline = True
+        if callback is not None:
+            callback()

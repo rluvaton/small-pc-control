@@ -1,6 +1,5 @@
 import os
 
-
 # Get string size
 def get_string_size(s):
     # type: (str) -> int
@@ -57,3 +56,7 @@ def create_dir_if_not_exists(dir_path, relative = False):
         return {
             'error': err_msg
         }
+
+
+def exit_program():
+    os._exit(0)

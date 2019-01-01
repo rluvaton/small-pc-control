@@ -1,6 +1,7 @@
 # Imports
 import socket
 import threading
+import sys
 
 from responseHandle import ResponseHandler
 from utils import *
@@ -34,6 +35,8 @@ heartbeat_response_ms = 'T'
 
 is_heartbeat_connected = True
 
+heartbeat = None
+
 
 def get_is_heartbeat_connected():
     return is_heartbeat_connected
@@ -43,14 +46,16 @@ def set_is_heartbeat_connected(value):
     global is_heartbeat_connected
     is_heartbeat_connected = value
 
-
-heartbeat = Heartbeat(target_ip, target_heartbeat_port, heartbeat_response_ms, heartbeat_request_ms, 10,
-                      get_is_heartbeat_connected, set_is_heartbeat_connected, size)
-
 # endregion
+
 
 if request_valid_response("Custom IP ?", 'y', 'n'):
     target_ip = raw_input("Your IP Is: ").strip()
+
+
+if __name__ == '__main__':
+    heartbeat = Heartbeat(target_ip, target_heartbeat_port, heartbeat_response_ms, heartbeat_request_ms, 10,
+                          get_is_heartbeat_connected, set_is_heartbeat_connected, size)
 
 
 # Init Server - Declare, Connect and wait for ready
@@ -89,46 +94,55 @@ def init_server(unique):
     print '\nYou Can Start Typing...'
 
 
-print 'Initializing...'
-init_server(heartbeat.connect())
+if __name__ == '__main__':
+    print 'Initializing...'
+    init_server(heartbeat.connect())
 
-# Create Thread of the run heartbeat
-threading.Thread(
-    target = heartbeat.run,
-    args = ()
-    # without comma you'd get error:
-    # Error: a... TypeError: handle_client_connection() argument after * must be a sequence, not _socketobject
-).start()
+    # Create Thread of the run heartbeat
+    threading.Thread(
+        target = heartbeat.run,
+        args = ()
+        # without comma you'd get error:
+        # Error: a... TypeError: handle_client_connection() argument after * must be a sequence, not _socketobject
+    ).start()
 
-while True:
-    # ask the server whether he wants to continue
-    message = raw_input("> ")
-    print 'send: {}'.format(message)
+    while True:
+        # ask the server whether he wants to continue
+        message = raw_input("> ")
+        print 'send: {}'.format(message)
 
-    if not server:
-        print 'Server Disconnected'
-        break
+        if not server:
+            print 'Server Disconnected'
+            break
 
-    handler = ResponseHandler(lambda _size: server.recv((size if _size is None else _size)),
-                              lambda _mess: server.send(_mess))
+        handler = ResponseHandler(lambda _size: server.recv((size if _size is None else _size)),
+                                  lambda _mess: server.send(_mess))
 
-    # Message sent to server
-    server.send(message)
+        if not get_is_heartbeat_connected():
+            continue
 
-    # Message received from server
-    data = server.recv(size)
+        # Message sent to server
+        server.send(message)
 
-    fn_res = handler.handle_requests(message, data)
+        # Message received from server
+        data = server.recv(size)
 
-    # Print the received message
-    print 'Received: {}'.format(data)
+        if data.startswith('Error:'):
+            print data
+            continue
 
-    if 'close-client' in fn_res and fn_res['close-client']:
-        is_heartbeat_connected = False
-        break
+        fn_res = handler.handle_requests(message, data)\
 
-    if 'error' in fn_res:
-        print 'Error', fn_res
-        break
+        # Print the received message
+        print 'Received: {}'.format(data)
 
-server.close()
+        if 'close-client' in fn_res and fn_res['close-client']:
+            heartbeat.close(exit_program)
+
+        if 'stop-heartbeat' in fn_res and fn_res['stop-heartbeat']:
+            break
+
+        if 'error' in fn_res:
+            print 'Error', fn_res
+
+    server.close()

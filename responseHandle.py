@@ -94,7 +94,7 @@ class ResponseHandler:
 
         res = user_action['fn'](content)
 
-        if isinstance(res, basestring) or len(res) == 1:
+        if isinstance(res, basestring):
             res = {
                 'message': res,
                 'close-client': False
@@ -121,7 +121,7 @@ class ResponseHandler:
 
     def stop_heartbeat(self, content):
         return {
-            'close-client': True
+            'stop-heartbeat': True
         }
 
     def screenshot_handler(self, response):
@@ -137,9 +137,19 @@ class ResponseHandler:
         if 'error' in save_path:
             return save_path
 
+        if 'error' in response:
+            return {
+                'error': response
+            }
+
         try:
-            fp = open(fname,'wb')
+            fp = open(fname, 'wb')
             while True:
+                if response.startswith('Error:'):
+                    fp.close()
+                    return {
+                        'error': response.replace('Error:', '', 1)
+                    }
                 if not response or response == 'Image Data':
                     print '-- end image --'
                     break
@@ -181,4 +191,3 @@ class ResponseHandler:
         return {
             'message': 'Success'
         }
-
