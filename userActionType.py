@@ -66,9 +66,9 @@ all_actions_type_help = [
     },
     {
         "name": "run program",
-        "description": "Run program by name or path",
-        "format": "run program: <program name or program path>",
-        "example": "run program: Chrome",
+        "description": "Run program by path",
+        "format": "run program: <program path>",
+        "example": "run program: C:\\Program.exe",
         "notes": "user must be logged in",
         "alternative": None
     },

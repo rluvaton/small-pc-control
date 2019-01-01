@@ -1,7 +1,6 @@
 # Imports
 import socket
 import threading
-import sys
 
 from responseHandle import ResponseHandler
 from utils import *
@@ -47,12 +46,12 @@ def set_is_heartbeat_connected(value):
     global is_heartbeat_connected
     is_heartbeat_connected = value
 
+
 # endregion
 
 
 if request_valid_response("Custom IP ?", 'y', 'n'):
     target_ip = raw_input("Your IP Is: ").strip()
-
 
 if __name__ == '__main__':
     heartbeat = Heartbeat(target_ip, target_heartbeat_port, heartbeat_response_ms, heartbeat_request_ms, 10,
