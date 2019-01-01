@@ -77,7 +77,6 @@ def heartbeat_send(user, message):
     :param user: User that need to send to
     :param message: Message to sent
     """
-    print 'send ', message
     user.send(message, False)
 
 

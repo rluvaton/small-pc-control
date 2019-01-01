@@ -282,7 +282,7 @@ class UserActions:
         # Start reading & sending the image
         img_file = open(saving_path, 'rb')
         while True:
-            d_block = img_file.read(512)
+            d_block = img_file.read(1024)
             if not d_block:
                 break
             self.send_fn(d_block)
@@ -413,6 +413,3 @@ class UserActions:
             self.user_connected = True
 
         return res
-
-    def help(self, content):
-        return
