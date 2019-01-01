@@ -236,7 +236,7 @@ class UserActions:
 
         if os.path.isfile(content.replace('"', '')):
             try:
-                os.system('call ' + content)
+                os.system("\"{}\"".format(content))
             except Exception, err:
                 err_mes = 'Error opening program ({}), try again later'.format(content)
                 print err_mes, err
@@ -246,15 +246,11 @@ class UserActions:
 
             return 'Program {} opened'.format(content)
 
-        try:
-            os.system('start ' + content)
-            return 'Program {} opened'.format(content)
-        except Exception, err:
-            err_mes = 'Error opening program ({}), try again later'.format(content)
-            print err_mes, err
-            return {
-                'error': err_mes,
-            }
+        err_mes = 'Please provide a path to the program'
+        print err_mes
+        return {
+            'error': err_mes,
+        }
 
     def send_screen_shot(self, content):
         # type: (str) -> {'message': str, 'error': str, 'close-client': bool}
