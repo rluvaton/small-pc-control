@@ -11,22 +11,6 @@ bind_ip = '0.0.0.0'
 bind_port = 9999
 bind_heartbeat_port = 9998
 
-
-# Request for valid response
-def request_valid_response(request, yes = 'y', no = 'n', case_matters = False):
-    # type: (str, str, str, bool) -> bool
-    res = None
-    request += ' ({}/{})'.format(yes, no)
-    while res != no and res != yes:
-        res = raw_input(request)
-        res = res if case_matters else res.strip().lower()
-    return res == yes
-
-
-if request_valid_response("Local IP?", 'y', 'n'):
-    # Local host
-    bind_ip = '127.0.0.1'
-
 size = 4096
 
 # region Requests Server
