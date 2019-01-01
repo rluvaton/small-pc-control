@@ -131,10 +131,13 @@ if __name__ == '__main__':
             print data
             continue
 
-        fn_res = handler.handle_requests(message, data)\
+        fn_res = handler.handle_requests(message, data)
 
-        # Print the received message
-        print 'Received: {}'.format(data)
+        if 'type' in fn_res and fn_res['type'] == 'screenshot':
+            print 'Received Image Content'
+        else:
+            # Print the received message
+            print 'Received: {}'.format(data)
 
         if 'close-client' in fn_res and fn_res['close-client']:
             heartbeat.close(exit_program)

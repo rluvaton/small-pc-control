@@ -65,9 +65,9 @@ class ResponseHandler:
         :return: Return the result, message in case of success, if to close the client and error message if there is one
         """
 
-        res = self.get_request_type(request)
+        reqType = self.get_request_type(request)
 
-        if res is None:
+        if reqType is None:
             err_mes = 'Error occurred at get request type'
             print err_mes
             return {
@@ -75,9 +75,9 @@ class ResponseHandler:
                 'close-client': False
             }
 
-        if 'error' in res:
-            err_mes = res['error'] if res['error'] is None else 'Error ar get request type'
-            print err_mes, res
+        if 'error' in reqType:
+            err_mes = reqType['error'] if reqType['error'] is None else 'Error ar get request type'
+            print err_mes, reqType
             return {
                 'error': err_mes,
                 'close-client': False
@@ -85,7 +85,7 @@ class ResponseHandler:
         from userActionType import UserActionType
 
         # Get action Handler Function
-        user_action = UserActionType(self).get_action_fn(res['type'])
+        user_action = UserActionType(self).get_action_fn(reqType['type'])
 
         # Not Founded
         if 'fn' not in user_action:
@@ -105,6 +105,8 @@ class ResponseHandler:
 
         if 'message' not in res:
             res['message'] = 'No message provided'
+
+        res['type'] = reqType['type']
 
         return res
 
@@ -151,10 +153,9 @@ class ResponseHandler:
                         'error': response.replace('Error:', '', 1)
                     }
                 if not response or response == 'Image Data':
-                    print '-- end image --'
                     break
                 fp.write(response)
-                response = self.recv(512)
+                response = self.recv(1024)
             fp.close()
         except Exception, err:
             err_msg = 'Error at saving image accord'

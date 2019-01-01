@@ -1,5 +1,6 @@
 import os
 
+
 # Get string size
 def get_string_size(s):
     # type: (str) -> int
